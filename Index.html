@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Pesquisas - PARNA e REVIS de Boa Nova </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --primary-green: #1b5e20; --hover-green: #2e7d32; }
+        
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; }
+        
+        /* Header */
+        .header-container { 
+            background: white; padding: 25px; border-bottom: 5px solid var(--primary-green); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 25px; 
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+        }
+        
+        .header-logo { height: 70px; width: auto; }
+        .header-text h2 { color: var(--primary-green); font-weight: 800; margin: 0; font-size: 1.8rem; }
+
+        /* Filtros e KPI */
+        .filter-box { background: white; padding: 25px; border-radius: 15px; border: 1px solid #e0e0e0; }
+        .kpi-card { 
+            background: linear-gradient(135deg, var(--hover-green), var(--primary-green)); color: white; 
+            text-align: center; padding: 25px; border-radius: 15px;
+        }
+
+        /* AJUSTE DE FONTE PARA COMPUTADOR */
+        @media (min-width: 992px) {
+            #dataTable td { font-size: 1.1rem; padding: 18px 15px; } 
+            #dataTable th { font-size: 1.1rem; padding: 18px 15px; }
+            .btn-link-download { padding: 8px 18px !important; font-size: 0.95rem !important; }
+            .form-label { font-size: 1rem !important; }
+            .form-select, .form-control { font-size: 1.05rem !important; height: 48px; }
+            .titulo-secao { font-size: 1.6rem; }
+        }
+        
+        /* Ajuste para Celular */
+        @media (max-width: 991px) {
+            #dataTable td { font-size: 0.9rem; padding: 12px; }
+            #dataTable th { font-size: 0.8rem; padding: 12px; }
+            #dataTable { min-width: 750px; }
+            .header-container { justify-content: center; text-align: center; }
+        }
+
+        /* Estilos Gerais */
+        .table-responsive { border-radius: 15px; background: white; overflow-x: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        #dataTable thead { background-color: var(--primary-green); color: white; }
+        
+        .btn-link-download { 
+            background-color: var(--primary-green); color: white !important; border-radius: 30px; 
+            text-decoration: none; display: inline-block; transition: 0.3s; font-weight: 600; padding: 6px 15px;
+        }
+        .btn-link-download:hover { background-color: var(--hover-green); transform: scale(1.05); }
+
+        .badge { font-weight: 600; padding: 8px 12px !important; border-radius: 8px; }
+        .badge-fauna { background-color: #ef6c00; }
+        .badge-flora { background-color: #2e7d32; }
+        .badge-outros { background-color: #455a64; }
+        
+        .titulo-secao { 
+            color: var(--primary-green); font-weight: 700; margin-bottom: 25px; 
+            border-left: 8px solid var(--primary-green); padding-left: 15px; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-container">
+    <img src="https://amazoniaprotege.mpf.mp.br/imagens/logo-parceiro-icmbio.png" alt="Logo" class="header-logo">
+    <div class="header-text">
+        <h2>Painel de Pesquisas Científicas</h2>
+        <h5 class="text-muted fw-normal">Parque Nacional de Boa Nova</h5>
+    </div>
+</div>
+
+<div class="container-fluid px-3 px-md-5">
+    <div class="row g-4">
+        <div class="col-12 col-xl-9">
+            <div class="filter-box shadow-sm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-bold">ANO</label>
+                        <select id="filterAno" class="form-select" onchange="filterData()">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <label class="form-label fw-bold">PESQUISAR TÍTULO</label>
+                        <input type="text" id="searchTerm" class="form-control" placeholder="Ex: Fauna, Caatinga..." onkeyup="filterData()">
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold">CATEGORIAS</label>
+                        <div class="d-flex gap-3 pt-2 flex-wrap">
+                            <div class="form-check"><input class="form-check-input" type="checkbox" id="chkFauna" onchange="filterData()" checked><label class="form-check-label">Fauna</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" id="chkFlora" onchange="filterData()" checked><label class="form-check-label">Flora</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" id="chkOutros" onchange="filterData()" checked><label class="form-check-label">Manejo/Outros</label></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-xl-3">
+            <div class="kpi-card shadow-sm h-100 d-flex flex-column justify-content-center">
+                <h6 class="text-uppercase small opacity-75 fw-bold mb-1">Pesquisas Encontradas</h6>
+                <h1 id="kpiTotal" class="display-4 fw-bold m-0">0</h1>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="titulo-secao mt-5">Catálogo de Artigos Científicos</h4>
+
+    <div class="card border-0 mb-5">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="dataTable">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width: 100px;">Ano</th>
+                        <th style="width: 150px;">Área</th>
+                        <th>Título da Pesquisa</th>
+                        <th class="text-center" style="width: 120px;">Acesso</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const db = [
+        { ano: "1999", cat: "Flora", titulo: "Composição florística e fitossociologia de uma área de Caatinga em Contendas do Sincorá, Bahia", link: "https://icmbioe5-my.sharepoint.com/:b:/g/personal/leia_souza_icmbio_gov_br/IQAy0MLg9cRzRLXu5Qxn3cMqAYdbQnFP_BTO1SmS6VcLQbU?e=ou8Uha" },
+        
+    ];
+
+    function filterData() {
+        const ano = document.getElementById('filterAno').value;
+        const term = document.getElementById('searchTerm').value.toLowerCase();
+        const fFauna = document.getElementById('chkFauna').checked;
+        const fFlora = document.getElementById('chkFlora').checked;
+        const fOutros = document.getElementById('chkOutros').checked;
+
+        const filtered = db.filter(d => {
+            const mAno = (ano === "" || d.ano === ano);
+            const mTerm = d.titulo.toLowerCase().includes(term);
+            
+            // Lógica robusta para categorias
+            let mCat = false;
+            if (fFauna && d.cat.includes('Fauna')) mCat = true;
+            if (fFlora && d.cat.includes('Flora')) mCat = true;
+            if (fOutros && (d.cat.includes('Manejo') || d.cat.includes('Outros'))) mCat = true;
+            
+            return mAno && mTerm && mCat;
+        });
+        render(filtered);
+    }
+
+    function render(data) {
+        const tbody = document.querySelector('#dataTable tbody');
+        document.getElementById('kpiTotal').innerText = data.length;
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5">Nenhum artigo encontrado com esses filtros.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(d => {
+            // Define a cor da badge dinamicamente
+            let badgeClass = 'badge-outros';
+            if (d.cat.includes('Fauna')) badgeClass = 'badge-fauna';
+            else if (d.cat.includes('Flora')) badgeClass = 'badge-flora';
+
+            return `
+            <tr>
+                <td class="fw-bold text-success text-center align-middle">${d.ano}</td>
+                <td class="align-middle"><span class="badge ${badgeClass}">${d.cat}</span></td>
+                <td class="align-middle">${d.titulo}</td>
+                <td class="text-center align-middle"><a href="${d.link}" target="_blank" rel="noopener" class="btn-link-download">Abrir</a></td>
+            </tr>
+            `;
+        }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Popula o select de Anos automaticamente do mais recente para o mais antigo
+        const anos = [...new Set(db.map(d => d.ano))].sort((a, b) => b - a);
+        const sel = document.getElementById('filterAno');
+        anos.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a; 
+            opt.textContent = a;
+            sel.appendChild(opt);
+        });
+        
+        filterData(); // Carrega os dados iniciais
+    });
+</script>
+
+</body>
+</html>
